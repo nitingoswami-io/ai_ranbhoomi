@@ -41,7 +41,7 @@ The seam between the two is intentional: `insta-quotes` guarantees grounding mat
 
 ### `trend-radar` → writer → renderer → Apple Notes / Notion
 
-Daily AI/ML content pipeline. **Stages 1-4 are built in this repo: `trend-radar` → `pipeline/writer/` → `pipeline/renderer/` → `pipeline/delivery/`. Delivery today only targets `apple-notes`; Notion delivery and the `mark_covered` loop-close back to trend-radar are the remaining gaps.**
+Daily AI/ML content pipeline. **All stages are built in this repo: `trend-radar` → `pipeline/writer/` → `pipeline/renderer/` → `pipeline/delivery/` → `mark_covered` loop-close. Delivery today only targets `apple-notes`; Notion delivery is the remaining gap.**
 
 The intended flow:
 
@@ -50,7 +50,7 @@ The intended flow:
 3. **[Writer](pipeline/writer/README.md) (built, `pipeline/writer/`)** — a Pydantic AI agent turns the surviving top-N topics into narrative drafts. Reads `TrendingResult` JSON on stdin, emits a `DraftBundle` on stdout. Uses trend-radar's `score.explanation` verbatim as `ranking_rationale` so the reason a topic ranks is never LLM-paraphrased.
 4. **[Renderer](pipeline/renderer/README.md) (built, `pipeline/renderer/`)** — turns each draft into a target-specific bundle: `markdown` (review), `apple-notes` (HTML for `create_note`), or `notion` (Notion API blocks). One canonical markdown layout lives in `renderer/markdown.py`; the HTML and Notion targets convert from it.
 5. **[Delivery](pipeline/delivery/README.md) (built, `pipeline/delivery/`)** — reads the rendered bundle and pushes each piece to its target. Today: `apple-notes` via a direct POST to the host bridge on `localhost:48213`. A local SQLite ledger (`(run_id, topic_id, target)`) makes same-bundle re-runs idempotent. Notion delivery is next.
-6. **`trend-radar.mark_covered`** — closes the loop. Not yet wired from `delivery`; call it manually or from a small shell script after the delivery report shows `delivered`. Idempotent, so re-runs are safe.
+6. **`mark_covered` (built, `mcp_server/trend-radar-mcp/scripts/mark_covered.py`)** — reads the delivery report, upserts a coverage row in trend-radar's novelty ledger for every piece with `status=delivered`. Runs as the final stage of `pipeline/run_daily.sh`. Idempotent — same report twice = same ledger state.
 
 The novelty ledger is the load-bearing piece. Without it, the pipeline re-covers whatever is trending most persistently and produces near-duplicate output day after day. `check_novelty` before writing and `mark_covered` after publishing are non-optional gates, not conveniences.
 

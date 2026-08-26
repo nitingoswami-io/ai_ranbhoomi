@@ -60,6 +60,7 @@ for py in "$TREND_PY" "$WRITER_PY" "$RENDERER_PY" "$DELIVERY_PY"; do
 done
 
 FETCH_SCRIPT="$REPO/mcp_server/trend-radar-mcp/scripts/fetch.py"
+MARK_COVERED_SCRIPT="$REPO/mcp_server/trend-radar-mcp/scripts/mark_covered.py"
 LOOKBACK="${LOOKBACK_HOURS:-24}"
 LIMIT="${TOPIC_LIMIT:-5}"
 FOLDER="${APPLE_NOTES_FOLDER:-Daily Brief}"
@@ -84,7 +85,8 @@ fi
     "$TREND_PY" "$FETCH_SCRIPT" --lookback-hours "$LOOKBACK" --limit "$LIMIT" \
       | "$WRITER_PY" -m writer "${WRITER_ARGS[@]}" \
       | "$RENDERER_PY" -m renderer -t apple-notes --apple-notes-folder "$FOLDER" \
-      | "$DELIVERY_PY" -m delivery "${DELIVERY_ARGS[@]}"
+      | "$DELIVERY_PY" -m delivery "${DELIVERY_ARGS[@]}" \
+      | "$TREND_PY" "$MARK_COVERED_SCRIPT"
 
     echo
     echo "=== $(date -Iseconds) done ==="

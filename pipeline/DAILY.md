@@ -5,13 +5,16 @@ This wires the four pipeline stages into a single command that runs every day at
 ## What runs
 
 ```
-mcp_server/trend-radar-mcp/scripts/fetch.py     (new)
-     → pipeline/writer      (existing)
-     → pipeline/renderer    (existing)
-     → pipeline/delivery    (existing)
+mcp_server/trend-radar-mcp/scripts/fetch.py
+     → pipeline/writer
+     → pipeline/renderer
+     → pipeline/delivery
+     → mcp_server/trend-radar-mcp/scripts/mark_covered.py   (closes the novelty loop)
 ```
 
 Each stage reads JSON on stdin, writes JSON on stdout. `run_daily.sh` is the shell orchestrator that pipes them together and writes a timestamped log to `pipeline/logs/`.
+
+The final stage reads the delivery report and, for each piece with `status=delivered`, upserts a coverage row into trend-radar's novelty ledger. Idempotent — same report twice = same final ledger state.
 
 ## One-time setup
 
@@ -101,5 +104,4 @@ rm ~/Library/LaunchAgents/com.nitin.ai-ranbhoomi.daily.plist
 
 ## What's NOT wired yet
 
-- **`trend-radar.mark_covered` loop-close.** After delivery succeeds, nothing marks the topics as covered — so the next run may re-surface them. Two ways to close it: subprocess-invoke `trend_radar` and call `mark_covered`, or write directly to the SQLite ledger. Not built; see `pipeline/delivery/README.md`.
 - **Notion delivery.** Only `apple-notes` today.
