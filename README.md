@@ -54,6 +54,8 @@ The intended flow:
 
 The novelty ledger is the load-bearing piece. Without it, the pipeline re-covers whatever is trending most persistently and produces near-duplicate output day after day. `check_novelty` before writing and `mark_covered` after publishing are non-optional gates, not conveniences.
 
+**Automating it:** [`pipeline/DAILY.md`](pipeline/DAILY.md) walks through wiring the whole thing up as a launchd job that fires at 21:00 daily. Uses `pipeline/run_daily.sh` as the orchestrator; catches up on Mac-wake if the machine was asleep at the scheduled time.
+
 ## Conventions
 
 - Secrets stay out of git — see `.gitignore` (`.env`, `*.secret`, etc.). Rotate anything that was ever committed elsewhere.

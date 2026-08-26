@@ -23,3 +23,4 @@ node_modules/
 # Pipeline-local state
 data/
 *.db
+pipeline/logs/*.log

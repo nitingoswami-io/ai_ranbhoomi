@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Daily pipeline runner for ai_ranbhoomi.
+    Fires at 21:00 local time every day. If the Mac is asleep at 21:00,
+    launchd catches up on next wake — this is why we prefer launchd over cron.
+
+    Install:
+        # 1. Replace __REPO__ below with the absolute path to your ai_ranbhoomi checkout
+        sed "s|__REPO__|$(pwd)|g" com.nitin.ai-ranbhoomi.daily.plist.template \
+          > ~/Library/LaunchAgents/com.nitin.ai-ranbhoomi.daily.plist
+
+        # 2. Load into launchd (modern form, replaces `launchctl load`)
+        launchctl bootstrap "gui/$(id -u)" \
+          ~/Library/LaunchAgents/com.nitin.ai-ranbhoomi.daily.plist
+
+        # 3. Verify
+        launchctl list | grep ai-ranbhoomi
+
+    Trigger a run right now (for testing):
+        launchctl kickstart -k "gui/$(id -u)/com.nitin.ai-ranbhoomi.daily"
+
+    Uninstall:
+        launchctl bootout "gui/$(id -u)/com.nitin.ai-ranbhoomi.daily"
+        rm ~/Library/LaunchAgents/com.nitin.ai-ranbhoomi.daily.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nitin.ai-ranbhoomi.daily</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__REPO__/pipeline/run_daily.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__REPO__</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>21</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- Don't hold launchd's socket open; this is a batch job. -->
+    <key>KeepAlive</key>
+    <false/>
+
+    <!-- launchd captures whatever run_daily.sh leaks past its `tee`. -->
+    <key>StandardOutPath</key>
+    <string>__REPO__/pipeline/logs/launchd.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>__REPO__/pipeline/logs/launchd.stderr.log</string>
+
+    <!--
+        launchd inherits a minimal env; run_daily.sh sources pipeline/.env
+        for API keys. Set PATH here for anything that shells out (uv, etc.).
+    -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>
