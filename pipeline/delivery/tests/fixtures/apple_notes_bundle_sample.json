@@ -1,0 +1,18 @@
+{
+  "run_id": "test-run-0001",
+  "target": "apple-notes",
+  "pieces": [
+    {
+      "topic_id": "a1b2c3d4e5f6",
+      "name": "GPT-6 Preview Lands with a Jump on ARC-AGI",
+      "body_html": "<h1>GPT-6 Preview Lands with a Jump on ARC-AGI</h1>\n<p><em>OpenAI's preview posts multi-step reasoning gains.</em></p>\n<p>Sample body for the delivery scaffold.</p>",
+      "folder": "Daily Brief"
+    },
+    {
+      "topic_id": "9f8e7d6c5b4a",
+      "name": "Second Test Piece",
+      "body_html": "<h1>Second Test Piece</h1><p>Body.</p>",
+      "folder": "Daily Brief"
+    }
+  ]
+}

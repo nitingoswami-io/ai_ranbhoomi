@@ -8,7 +8,7 @@ Experimentation arena for AI tooling — Claude skills, MCP servers, and content
 |---|---|
 | [`DIY-claude-skills/`](DIY-claude-skills/) | Hand-rolled Claude Code skills (`.skill` files) — Instagram quote cards, LinkedIn tech carousels, payer-in-the-loop, etc. |
 | [`mcp_server/`](mcp_server/README.md) | Custom MCP servers packaged for the Docker MCP Toolkit. See sub-projects below. |
-| [`pipeline/`](pipeline/) | End-to-end content pipeline that stitches trend-radar → writer → renderer → Apple Notes/Notion. Currently: [`writer/`](pipeline/writer/README.md), [`renderer/`](pipeline/renderer/README.md). |
+| [`pipeline/`](pipeline/) | End-to-end content pipeline that stitches trend-radar → writer → renderer → delivery. Stages: [`writer/`](pipeline/writer/README.md), [`renderer/`](pipeline/renderer/README.md), [`delivery/`](pipeline/delivery/README.md). |
 
 ### MCP servers
 
@@ -41,7 +41,7 @@ The seam between the two is intentional: `insta-quotes` guarantees grounding mat
 
 ### `trend-radar` → writer → renderer → Apple Notes / Notion
 
-Daily AI/ML content pipeline. **Stages 1-3 (`trend-radar` → `pipeline/writer/` → `pipeline/renderer/`) and the terminal stage (`apple-notes`) all live in this repo. Delivery — reading a rendered bundle and pushing to `apple-notes` MCP or Notion, then calling `mark_covered` — is still a small shell script away.**
+Daily AI/ML content pipeline. **Stages 1-4 are built in this repo: `trend-radar` → `pipeline/writer/` → `pipeline/renderer/` → `pipeline/delivery/`. Delivery today only targets `apple-notes`; Notion delivery and the `mark_covered` loop-close back to trend-radar are the remaining gaps.**
 
 The intended flow:
 
@@ -49,8 +49,8 @@ The intended flow:
 2. **`trend-radar.check_novelty`** filters the ranked list against a persistent SQLite ledger (mounted at `/data`). Anything already covered is skipped — the same story never gets written twice.
 3. **[Writer](pipeline/writer/README.md) (built, `pipeline/writer/`)** — a Pydantic AI agent turns the surviving top-N topics into narrative drafts. Reads `TrendingResult` JSON on stdin, emits a `DraftBundle` on stdout. Uses trend-radar's `score.explanation` verbatim as `ranking_rationale` so the reason a topic ranks is never LLM-paraphrased.
 4. **[Renderer](pipeline/renderer/README.md) (built, `pipeline/renderer/`)** — turns each draft into a target-specific bundle: `markdown` (review), `apple-notes` (HTML for `create_note`), or `notion` (Notion API blocks). One canonical markdown layout lives in `renderer/markdown.py`; the HTML and Notion targets convert from it.
-5. **Terminal delivery** — `apple-notes` MCP writes the rendered piece into a Notes folder on macOS via the host bridge; Notion delivery uses the external Notion MCP.
-6. **`trend-radar.mark_covered`** — closes the loop. Idempotent, so re-running the pipeline on the same day is safe.
+5. **[Delivery](pipeline/delivery/README.md) (built, `pipeline/delivery/`)** — reads the rendered bundle and pushes each piece to its target. Today: `apple-notes` via a direct POST to the host bridge on `localhost:48213`. A local SQLite ledger (`(run_id, topic_id, target)`) makes same-bundle re-runs idempotent. Notion delivery is next.
+6. **`trend-radar.mark_covered`** — closes the loop. Not yet wired from `delivery`; call it manually or from a small shell script after the delivery report shows `delivered`. Idempotent, so re-runs are safe.
 
 The novelty ledger is the load-bearing piece. Without it, the pipeline re-covers whatever is trending most persistently and produces near-duplicate output day after day. `check_novelty` before writing and `mark_covered` after publishing are non-optional gates, not conveniences.
 

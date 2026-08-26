@@ -19,3 +19,7 @@ node_modules/
 !.env.example
 .secret
 *.secret
+
+# Pipeline-local state
+data/
+*.db
