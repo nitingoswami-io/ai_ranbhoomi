@@ -1,0 +1,33 @@
+{
+  "run_id": "test-run-0001",
+  "generated_at": "2026-08-25T09:00:00Z",
+  "drafts": [
+    {
+      "topic_id": "a1b2c3d4e5f6",
+      "canonical_title": "GPT-6 Preview: Reasoning Benchmarks",
+      "headline": "GPT-6 Preview Lands with a Jump on ARC-AGI",
+      "subhead": "OpenAI's preview posts multi-step reasoning gains; an arXiv preprint corroborates.",
+      "body_md": "OpenAI released a preview of **GPT-6** today with new results on ARC-AGI, and the community response is fast. The [Hacker News thread](https://news.ycombinator.com/item?id=42101) pulled 428 points in under a day. An arXiv preprint on the same preview arrived within hours — evidence that this isn't a solo announcement pass but a topic with independent uptake.\n\nWhat's notable is the *cross-source corroboration*: a company blog, a discussion thread, and a research writeup all pointing at the same artifact within one lookback window.",
+      "key_signals": [
+        "428 points on Hacker News in <24h",
+        "corroborated by an arXiv preprint on the same day",
+        "final_score=0.89, top-ranked in this run"
+      ],
+      "sources": [
+        {
+          "title": "GPT-6 preview shows large jump on ARC-AGI",
+          "url": "https://openai.com/blog/gpt-6-preview",
+          "source": "hackernews",
+          "signal": "428 points, 312 comments on HN"
+        },
+        {
+          "title": "Scaling reasoning: an empirical study of preview GPT-6",
+          "url": "https://arxiv.org/abs/2508.11234",
+          "source": "arxiv",
+          "signal": "arXiv preprint, same day"
+        }
+      ],
+      "ranking_rationale": "Ranked #1: high velocity (12.3) on HN with 428 points, corroborated by an arXiv preprint on the same GPT-6 preview (+0.15 cross-source bonus)."
+    }
+  ]
+}
