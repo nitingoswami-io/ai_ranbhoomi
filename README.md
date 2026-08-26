@@ -8,7 +8,7 @@ Experimentation arena for AI tooling — Claude skills, MCP servers, and content
 |---|---|
 | [`DIY-claude-skills/`](DIY-claude-skills/) | Hand-rolled Claude Code skills (`.skill` files) — Instagram quote cards, LinkedIn tech carousels, payer-in-the-loop, etc. |
 | [`mcp_server/`](mcp_server/README.md) | Custom MCP servers packaged for the Docker MCP Toolkit. See sub-projects below. |
-| `pipeline/` | Placeholder for the end-to-end content pipeline that stitches the pieces together. |
+| [`pipeline/`](pipeline/) | End-to-end content pipeline that stitches trend-radar → writer → renderer → Apple Notes/Notion. Currently: [`writer/`](pipeline/writer/README.md). |
 
 ### MCP servers
 
@@ -41,13 +41,13 @@ The seam between the two is intentional: `insta-quotes` guarantees grounding mat
 
 ### `trend-radar` → writer → renderer → Apple Notes / Notion
 
-Daily AI/ML content pipeline. **Stage 1 (`trend-radar`) and the terminal stage (`apple-notes`) live in this repo; the writer and renderer in the middle are not yet built — they belong in `pipeline/`.**
+Daily AI/ML content pipeline. **Stage 1 (`trend-radar`), stage 2 (`pipeline/writer/`), and the terminal stage (`apple-notes`) live in this repo; the renderer between writer and delivery is not yet built.**
 
 The intended flow:
 
 1. **`trend-radar.get_trending_topics`** pulls the day's items from Hacker News, arXiv, and Hugging Face Daily Papers, clusters them (LLM-normalized when `ANTHROPIC_API_KEY` is set, lexical fallback otherwise), and returns ranked topics. Cross-source corroboration dominates rank — an arXiv paper that also lands on HN or the HF daily list rises to the top.
 2. **`trend-radar.check_novelty`** filters the ranked list against a persistent SQLite ledger (mounted at `/data`). Anything already covered is skipped — the same story never gets written twice.
-3. **Writer (planned, `pipeline/`)** — a Pydantic AI agent turns the surviving top-N topics into narrative drafts. Uses `trend-radar.explain_ranking` to ground each draft in the actual signal (points, upvotes, source overlap) rather than fabricating reasons a topic matters.
+3. **[Writer](pipeline/writer/README.md) (built, `pipeline/writer/`)** — a Pydantic AI agent turns the surviving top-N topics into narrative drafts. Reads `TrendingResult` JSON on stdin, emits a `DraftBundle` on stdout. Uses trend-radar's `score.explanation` verbatim as `ranking_rationale` so the reason a topic ranks is never LLM-paraphrased.
 4. **Renderer (planned, `pipeline/`)** — formats each draft for its target surface (Markdown for Apple Notes, blocks for Notion).
 5. **Terminal delivery** — `apple-notes` MCP writes the rendered piece into a Notes folder on macOS via the host bridge; Notion delivery uses the external Notion MCP.
 6. **`trend-radar.mark_covered`** — closes the loop. Idempotent, so re-running the pipeline on the same day is safe.

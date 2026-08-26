@@ -1,0 +1,100 @@
+{
+  "run_id": "test-run-0001",
+  "generated_at": "2026-08-25T09:00:00Z",
+  "lookback_hours": 24,
+  "clustering_method": "lexical",
+  "source_health": [
+    {"source": "hackernews", "ok": true, "items_fetched": 100, "latency_ms": 340},
+    {"source": "arxiv", "ok": true, "items_fetched": 40, "latency_ms": 620},
+    {"source": "huggingface", "ok": true, "items_fetched": 20, "latency_ms": 210}
+  ],
+  "topics": [
+    {
+      "topic_id": "a1b2c3d4e5f6",
+      "topic": {
+        "canonical_title": "GPT-6 Preview: Reasoning Benchmarks",
+        "one_line": "Preview of GPT-6 lands with new results on multi-step reasoning benchmarks.",
+        "entities": ["OpenAI", "GPT-6"],
+        "tags": ["llm", "benchmarks"]
+      },
+      "items": [
+        {
+          "item": {
+            "source": "hackernews",
+            "source_id": "hn-42101",
+            "title": "GPT-6 preview shows large jump on ARC-AGI",
+            "url": "https://openai.com/blog/gpt-6-preview",
+            "permalink": "https://news.ycombinator.com/item?id=42101",
+            "raw_score": 428,
+            "comment_count": 312,
+            "created_at": "2026-08-25T04:12:00Z",
+            "body_excerpt": "OpenAI released a preview of GPT-6 with new results on ARC-AGI and GPQA."
+          },
+          "velocity": 12.3,
+          "source_percentile": 0.98
+        },
+        {
+          "item": {
+            "source": "arxiv",
+            "source_id": "arxiv-2508.11234",
+            "title": "Scaling reasoning: an empirical study of preview GPT-6",
+            "url": "https://arxiv.org/abs/2508.11234",
+            "permalink": null,
+            "raw_score": 0,
+            "comment_count": null,
+            "created_at": "2026-08-25T06:00:00Z",
+            "body_excerpt": "We analyze GPT-6 preview on ARC-AGI, GPQA, and MATH."
+          },
+          "velocity": 1.0,
+          "source_percentile": 0.5
+        }
+      ],
+      "distinct_sources": 2,
+      "score": {
+        "velocity": 6.65,
+        "source_percentile": 0.74,
+        "corroboration_bonus": 0.15,
+        "novelty_multiplier": 1.0,
+        "final_score": 0.89,
+        "explanation": "Ranked #1: high velocity (12.3) on HN with 428 points, corroborated by an arXiv preprint on the same GPT-6 preview (+0.15 cross-source bonus)."
+      },
+      "suppressed": false
+    },
+    {
+      "topic_id": "9f8e7d6c5b4a",
+      "topic": {
+        "canonical_title": "Yesterday's stale topic",
+        "one_line": "This was covered yesterday.",
+        "entities": [],
+        "tags": []
+      },
+      "items": [
+        {
+          "item": {
+            "source": "hackernews",
+            "source_id": "hn-40000",
+            "title": "Old thing that got covered",
+            "url": "https://example.com/old",
+            "permalink": "https://news.ycombinator.com/item?id=40000",
+            "raw_score": 50,
+            "comment_count": 10,
+            "created_at": "2026-08-24T10:00:00Z",
+            "body_excerpt": null
+          },
+          "velocity": 0.5,
+          "source_percentile": 0.4
+        }
+      ],
+      "distinct_sources": 1,
+      "score": {
+        "velocity": 0.5,
+        "source_percentile": 0.4,
+        "corroboration_bonus": 0.0,
+        "novelty_multiplier": 0.3,
+        "final_score": 0.06,
+        "explanation": "Suppressed: 82% similar to a topic covered on 2026-08-24."
+      },
+      "suppressed": true
+    }
+  ]
+}
