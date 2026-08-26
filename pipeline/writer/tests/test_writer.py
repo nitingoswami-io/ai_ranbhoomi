@@ -11,7 +11,12 @@ from pathlib import Path
 
 import pytest
 
-from writer.agent import render_topic_prompt
+from writer.agent import (
+    MAX_WORDS,
+    MIN_WORDS,
+    _word_count_error,
+    render_topic_prompt,
+)
 from writer.cli import main
 from writer.models import DraftBundle, TrendingResultIn
 
@@ -88,6 +93,45 @@ def test_empty_topics_yields_empty_bundle(tmp_path):
     assert rc == 0
     bundle = DraftBundle.model_validate_json(out.read_text())
     assert bundle.drafts == []
+
+
+# --- word-count enforcement ---------------------------------------------
+
+
+def test_word_count_in_range_returns_none():
+    body = " ".join(["word"] * ((MIN_WORDS + MAX_WORDS) // 2))
+    assert _word_count_error(body) is None
+
+
+def test_word_count_at_boundaries_is_ok():
+    assert _word_count_error(" ".join(["w"] * MIN_WORDS)) is None
+    assert _word_count_error(" ".join(["w"] * MAX_WORDS)) is None
+
+
+def test_word_count_too_short_flags_and_names_gap():
+    body = " ".join(["short"] * (MIN_WORDS - 50))
+    err = _word_count_error(body)
+    assert err is not None
+    assert str(MIN_WORDS) in err
+    assert "50" in err  # names the gap
+
+
+def test_word_count_too_long_flags_and_names_overshoot():
+    body = " ".join(["long"] * (MAX_WORDS + 30))
+    err = _word_count_error(body)
+    assert err is not None
+    assert str(MAX_WORDS) in err
+    assert "30" in err  # names the overshoot
+
+
+def test_thin_coverage_escape_bypasses_word_count():
+    body = "Thin coverage — not enough signal to draft. Consider skipping."
+    assert _word_count_error(body) is None
+
+
+def test_leading_whitespace_does_not_defeat_thin_coverage():
+    body = "   \n  Thin coverage — not enough signal to draft. Consider skipping."
+    assert _word_count_error(body) is None
 
 
 @pytest.mark.skip(reason="requires ANTHROPIC_API_KEY and network — enable when you flesh out the agent")

@@ -5,47 +5,106 @@ the prompt: topic name, one-liner, entities, ranked items with their
 scores, and the deterministic score explanation from trend-radar. It
 must not introduce numbers, dates, or entities not present in that
 material — the writer's job is compression, not research.
+
+Word-count discipline is enforced two ways: the prompt names an explicit
+range and per-paragraph budgets, and an output_validator on the agent
+retries the model with a specific correction message if it comes in too
+short or too long.
 """
 from __future__ import annotations
 
 import os
 
-from pydantic_ai import Agent
+from pydantic_ai import Agent, ModelRetry, RunContext
 
 from writer.models import Draft, RankedTopicIn
 
 DEFAULT_MODEL = os.environ.get("WRITER_MODEL", "anthropic:claude-sonnet-4-6")
 
-SYSTEM_PROMPT = """\
+# body_md target range. The upper bound is the real discipline — 220 forces
+# cuts of meta-commentary and hedges. The lower bound stays generous (150) so
+# thin topics (few items, terse excerpts) don't get padded to hit a minimum.
+# The 'Thin coverage' escape hatch below is the pressure release when even
+# 150 words would require invention.
+MIN_WORDS = 150
+MAX_WORDS = 220
+THIN_COVERAGE_SIGNAL = "Thin coverage"
+
+SYSTEM_PROMPT = f"""\
 You compose short narrative drafts for a daily AI/ML briefing.
 
 You will receive ONE topic and the ranked items that produced its score.
-Your job is to turn that into a Draft the renderer can format.
+Turn that into a Draft the renderer can format.
 
 Non-negotiable rules:
 
 - Use ONLY the provided material. Never introduce numbers, dates,
   organizations, or events not present in the topic name, one-liner,
   entities, item titles, item body excerpts, or the ranking numbers.
-- `body_md` is 150-300 words of prose. Open with what changed or why
-  attention is on this now. Cite specific items only where the item
-  actually adds signal (e.g. "the arXiv preprint...", "the HN thread
-  with 428 points"). Close with one sentence on what to watch next —
-  only if the material supports it; otherwise omit.
+
+- `body_md` is {MIN_WORDS}-{MAX_WORDS} words in 2-3 short paragraphs.
+  Structure:
+    * Opening (~60-90 words): what changed or why attention is on this
+      now. Anchor to specific evidence (points, velocity, sources) in
+      the first two sentences.
+    * Middle (~80-120 words): the strongest supporting item, and any
+      cross-source corroboration. Name items concretely ("the HN
+      thread with 428 points", "the arXiv preprint titled X").
+    * Optional close (one short sentence, ≤25 words): a concrete open
+      question the material itself raises. Omit if forced.
+
+  Cut any sentence that could be dropped without losing evidence.
+  Do NOT write meta-commentary about what the convergence "means" or
+  "signals" — the evidence IS the story. Do NOT hedge ("it's worth
+  noting", "interestingly", "notably"). Prefer active voice and short
+  sentences.
+
 - `key_signals` is 2-4 short bullets naming concrete evidence: which
   sources corroborated, what the scores were, which items pulled
-  weight. These are the "why does this rank" details, not opinions.
+  weight. Not opinions.
+
 - `sources` lists each ranked item with a short `signal` line stating
   its evidence (e.g. "428 points on Hacker News", "top-quintile
-  velocity on arXiv"). Derive the signal from the numbers you were
-  given, not from prior knowledge.
-- `ranking_rationale` will be overwritten by the caller with the
-  trend-radar score explanation verbatim; you may leave it empty or
-  echo what you saw — it will not be used.
-- If the material is too thin to write 150 words without inventing
-  content, make `body_md` exactly: "Thin coverage — not enough signal
-  to draft. Consider skipping." That is a valid draft.
+  velocity on arXiv"). Derive from the numbers you were given.
+
+- `ranking_rationale` is overwritten by the caller — leave it empty
+  or echo what you saw.
+
+- If the material is too thin to write {MIN_WORDS} words without
+  inventing content, make `body_md` exactly: "{THIN_COVERAGE_SIGNAL} —
+  not enough signal to draft. Consider skipping." That is a valid
+  draft; do NOT pad to reach the target.
 """
+
+
+def _word_count_error(body_md: str) -> str | None:
+    """Return a correction message if body_md is out of range, else None.
+
+    The "thin coverage" escape hatch is exempt — a short refusal is a
+    valid outcome and shouldn't be padded to hit the minimum.
+
+    Split off from the validator so tests can exercise the rule directly
+    without any pydantic-ai machinery.
+    """
+    body = body_md.strip()
+    if body.startswith(THIN_COVERAGE_SIGNAL):
+        return None
+    n = len(body.split())
+    if n < MIN_WORDS:
+        return (
+            f"body_md is {n} words; target is {MIN_WORDS}-{MAX_WORDS}. "
+            f"Add at least {MIN_WORDS - n} more words of substance — do NOT pad. "
+            "Either surface concrete evidence you haven't used yet (item titles, "
+            "scores, cross-source overlap), or, if the material is genuinely too "
+            "thin, use the exact 'Thin coverage' escape from the system prompt."
+        )
+    if n > MAX_WORDS:
+        return (
+            f"body_md is {n} words; cap is {MAX_WORDS}. Cut at least {n - MAX_WORDS} words. "
+            "Drop meta-commentary, hedges, and any sentence that could be removed "
+            "without losing a piece of evidence. Preserve the concrete-evidence lines."
+        )
+    return None
 
 
 def build_agent(model: str = DEFAULT_MODEL) -> Agent[None, Draft]:
@@ -55,6 +114,14 @@ def build_agent(model: str = DEFAULT_MODEL) -> Agent[None, Draft]:
         system_prompt=SYSTEM_PROMPT,
         retries=2,
     )
+
+    @agent.output_validator
+    def _enforce_word_count(_ctx: RunContext[None], output: Draft) -> Draft:
+        err = _word_count_error(output.body_md)
+        if err:
+            raise ModelRetry(err)
+        return output
+
     return agent
 
 

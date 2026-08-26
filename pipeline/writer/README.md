@@ -4,6 +4,8 @@ Stage 2 of the content pipeline. Takes trend-radar's `TrendingResult` JSON in, e
 
 The writer does **compression, not research**. It only uses material already present in the trend-radar output — item titles, body excerpts, the deterministic score explanation. It never introduces numbers, dates, or entities from prior knowledge.
 
+Word-count discipline is enforced two ways: the prompt names an explicit **150-220 word** target with per-paragraph budgets, and an `output_validator` on the agent retries the model (up to 2x) with a specific correction message if it comes in out of range. Thin topics can opt out via the exact "Thin coverage — not enough signal to draft. Consider skipping." escape.
+
 ## Install
 
 ```bash
@@ -48,6 +50,6 @@ Scaffold tests cover model parsing, prompt rendering, and the `--dry-run` end-to
 
 ## What's next
 
-- **Prompt iteration.** The system prompt in `agent.py` is a starting draft. Expect to tighten it once you see live output — especially the "thin coverage" escape hatch and the 150-300 word discipline.
+- **Prompt iteration.** The system prompt in `agent.py` has been tuned against the fixture — expect to keep iterating once you see live output across a range of topic shapes. If you widen or shift the target range, update both the prompt AND `MIN_WORDS`/`MAX_WORDS` at the top of `agent.py` (they're the source of truth; the prompt f-string reads from them).
 - **Batch concurrency.** Currently drafts topics sequentially. `asyncio.gather` with a small semaphore is a one-line change if throughput matters.
 - **Renderer.** Sibling package `pipeline/renderer/` (not yet built) — should consume a `DraftBundle` and emit whatever the terminal stage (`apple-notes` MCP, Notion) accepts.
