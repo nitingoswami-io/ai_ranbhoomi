@@ -98,7 +98,7 @@ rm ~/Library/LaunchAgents/com.nitin.ai-ranbhoomi.daily.plist
 
 - **Job didn't run at 21:00** → `launchctl list | grep ai-ranbhoomi`. If the exit code column shows non-zero, look at `pipeline/logs/launchd.stderr.log` first (captures env/startup errors), then the latest timestamped log (captures pipeline output).
 - **Writer fails with "no API key"** → `pipeline/.env` isn't being sourced, or `ANTHROPIC_API_KEY` isn't set in it. `run_daily.sh` sources it early; check the log's first "=== …daily run ===" block.
-- **Delivery fails with 401** → bridge secret mismatch. `curl -s http://localhost:48213/health` should say `reachable`; check `mcp_server/apple-notes/bridge/.secret` matches what the bridge process is using.
+- **Delivery fails with 401 or connection refused** → run `mcp_server/apple-notes/bridge/install-bridge.sh --doctor`. It validates the plist's python interpreter, script path, secret file, launchd state, and `/health` in one go — catches dangling interpreters (e.g. after removing conda), stale script paths (e.g. after moving the repo), and secret mismatches.
 - **Delivery says "skipped: already delivered"** → that's the `pipeline/data/delivery.db` ledger doing its job. Delete the file to re-deliver the same run, or bump `LOOKBACK_HOURS` to pull a fresh trending run.
 - **No topics after novelty gate** → likely covered everything recently. Check with `sqlite3 pipeline/data/trend_radar.db 'SELECT * FROM covered ORDER BY covered_on DESC LIMIT 20;'`.
 
