@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections import Counter
 
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent, ModelRetry, RunContext
+from pydantic_ai import Agent, ModelRetry, RunContext, capture_run_messages
 from rapidfuzz import fuzz
 
 from trend_radar.config import AppSettings
@@ -25,6 +25,16 @@ from trend_radar.obs import get_logger
 
 _LOG = get_logger("clustering")
 _LEXICAL_THRESHOLD = 82  # per spec §4
+
+# The tool-call output is one large JSON blob: N clusters, each with a full
+# item_ids array. At ~140 items (a normal daily fetch), the default Anthropic
+# max_tokens (4096) truncates the JSON mid-generation — the SDK then delivers
+# `{}` to pydantic-ai's validator, which retries with the same result until
+# the retry budget is exhausted. 32K is well above what we've ever needed
+# empirically (140 items → ~9K tokens generated) and leaves headroom for
+# larger fetches without near-silent fallback to lexical. Billing is per
+# actually-generated token, so raising this ceiling costs nothing.
+_LLM_MAX_TOKENS = 32000
 
 
 class _ClusterOutput(BaseModel):
@@ -69,7 +79,13 @@ async def cluster_items(
         try:
             return await _llm_cluster(items, settings), "llm"
         except Exception as exc:  # noqa: BLE001 — degradation must be total
-            _LOG.warning("LLM clustering failed, falling back to lexical: %s", exc)
+            # The bare exception message drops the actual validator retry
+            # reasons; those live in the run's message log. Log a short trail
+            # so a future degradation is diagnosable without re-running by hand.
+            _LOG.warning(
+                "LLM clustering failed (%s items), falling back to lexical: %s",
+                len(items), exc,
+            )
 
     return _lexical_cluster(items), "lexical"
 
@@ -79,7 +95,15 @@ async def cluster_items(
 async def _llm_cluster(items: list[RawItem], settings: AppSettings) -> list[TopicCluster]:
     all_ids = {_item_key(i) for i in items}
     agent = _build_agent(settings.llm_model)
-    result = await agent.run(_format_prompt(items), deps=all_ids)
+    # capture_run_messages so the fallback logger has something concrete to
+    # emit when retries exhaust — otherwise the only signal is the generic
+    # "Exceeded maximum output retries" outer exception.
+    with capture_run_messages() as run_msgs:
+        try:
+            result = await agent.run(_format_prompt(items), deps=all_ids)
+        except Exception:
+            _LOG.debug("clustering agent failed after retries; last messages: %s", run_msgs[-4:])
+            raise
     return _materialize(result.output, items)
 
 
@@ -90,6 +114,7 @@ def _build_agent(model: str) -> Agent[set[str], list[_ClusterOutput]]:
         deps_type=set[str],
         system_prompt=_SYSTEM_PROMPT,
         retries=2,
+        model_settings={"max_tokens": _LLM_MAX_TOKENS},
     )
 
     @agent.output_validator
