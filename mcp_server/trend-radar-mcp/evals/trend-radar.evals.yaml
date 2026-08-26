@@ -1,0 +1,200 @@
+# trend-radar evaluation set — 10 read-only questions exercising multi-tool
+# reasoning across get_trending_topics, explain_ranking, check_novelty,
+# list_covered, and get_source_config.
+#
+# Follows the mclenhard/mcp-evals YAML schema. Judge model is Claude Sonnet;
+# scores each answer against `expected_result` via LLM-as-judge.
+#
+# See evals/README.md for how to run.
+
+model:
+  provider: anthropic
+  name: claude-sonnet-4-6
+  # api_key omitted → falls back to ANTHROPIC_API_KEY in the shell env.
+
+evals:
+
+  # ---------------------------------------------------------------------
+  # 1. The spec's own example — highest corroboration bonus + source count.
+  #    Exercises: get_trending_topics, then aggregation over the response.
+  # ---------------------------------------------------------------------
+  - name: highest_corroboration_bonus
+    description: >
+      Assistant must fetch trending topics, scan the score.corroboration_bonus
+      field across all returned topics, identify the maximum, and report both
+      the topic and the distinct_sources count that produced it.
+    prompt: >
+      Get today's trending AI/ML topics. Which topic had the highest
+      corroboration bonus, and how many distinct sources contributed to it?
+    expected_result: >
+      Answer must (a) name a specific topic from the trending_topics response,
+      (b) state a corroboration_bonus value between 0.0 and 0.45, and (c) state
+      a distinct_sources integer between 1 and 4 that is arithmetically
+      consistent with the bonus (bonus ≈ (distinct-1) * 0.15, capped at 0.45).
+      If every topic has bonus 0.0 (no cross-source coverage), the assistant
+      must say so plainly rather than fabricate a winner.
+
+  # ---------------------------------------------------------------------
+  # 2. Chained tool call: get_trending_topics → explain_ranking.
+  # ---------------------------------------------------------------------
+  - name: explain_top_scoring_topic
+    description: >
+      Assistant must fetch trending topics, pick the top-ranked one, and use
+      its topic_id to call explain_ranking, then narrate the four score
+      ingredients (velocity, source_percentile, corroboration, novelty).
+    prompt: >
+      Pull today's trending topics, pick the highest-scored one, and walk me
+      through why it scored that high — velocity, source percentile,
+      corroboration bonus, and novelty multiplier.
+    expected_result: >
+      Answer must reference all four score components with specific numeric
+      values from the explain_ranking response, and the arithmetic must be
+      consistent: final_score should equal (source_percentile +
+      corroboration_bonus) * novelty_multiplier. If get_trending_topics
+      returns no topics, the assistant must say so and skip explain_ranking
+      rather than invoke it with a fabricated topic_id.
+
+  # ---------------------------------------------------------------------
+  # 3. Single-tool sanity anchor — check_novelty ad-hoc.
+  # ---------------------------------------------------------------------
+  - name: novelty_check_ad_hoc
+    description: >
+      Assistant should call check_novelty with the user's proposed title and
+      report is_novel plus the closest match if any.
+    prompt: >
+      I'm thinking of writing a piece titled "Claude Opus 5 crushes SWE-bench
+      benchmarks". Is this something I've covered recently? If it's close to
+      previous coverage, tell me what the previous piece was.
+    expected_result: >
+      Answer must state is_novel (true or false), report the max_similarity
+      value from the check_novelty response, and if is_novel is false must
+      name the closest_match_title. Must not invent a ledger entry that
+      isn't in the tool's response.
+
+  # ---------------------------------------------------------------------
+  # 4. Investigate suppressed topics — resilient to empty-ledger case.
+  # ---------------------------------------------------------------------
+  - name: investigate_suppressed_topics
+    description: >
+      Assistant must fetch with include_suppressed=true and, for each
+      suppressed topic, either query the ledger via list_covered to identify
+      what triggered suppression, or explain the suppression_reason directly.
+    prompt: >
+      Get today's trending topics with suppressed ones included. For any
+      that are suppressed, tell me what previous coverage triggered the
+      suppression. If none are suppressed, say so.
+    expected_result: >
+      If any topic has suppressed=true, the answer must (a) list those
+      topics, and (b) provide the suppression_reason or a matching ledger
+      entry from list_covered. If no topics are suppressed, the answer must
+      say exactly that — no invented suppression events.
+
+  # ---------------------------------------------------------------------
+  # 5. Source-filtered view + explain_ranking chain.
+  # ---------------------------------------------------------------------
+  - name: top_arxiv_paper_explained
+    description: >
+      Assistant must call get_trending_topics with sources=["arxiv"], pick
+      the top paper, and explain its ranking. Exercises the sources filter
+      argument and the two-tool chain.
+    prompt: >
+      What's the top arXiv paper trending right now, and why did it rank
+      where it did? Focus only on arXiv sources.
+    expected_result: >
+      Answer must confirm the query was scoped to arXiv (via the sources
+      argument), name a specific paper from the response, and reference
+      values from explain_ranking. Note: arXiv items have raw_score=0, so
+      velocity will be 0 and source_percentile will be the baseline (0.5).
+      Answer should not misinterpret this as "the paper is unimportant".
+
+  # ---------------------------------------------------------------------
+  # 6. Cross-source topic identification via filtering.
+  # ---------------------------------------------------------------------
+  - name: cross_source_topics
+    description: >
+      Assistant must fetch trending topics and identify which have
+      distinct_sources > 1. Exercises structural reasoning over the response
+      without needing a second tool call.
+    prompt: >
+      Are any of today's trending topics being discussed across multiple
+      sources at once? If yes, list them with the number of sources each.
+    expected_result: >
+      Answer must either list topics with distinct_sources > 1 (naming them
+      and their source counts), or say none exist. Every claimed
+      cross-source topic must have a distinct_sources value ≥ 2 in the
+      actual response. No fabricated topics.
+
+  # ---------------------------------------------------------------------
+  # 7. Single-tool sanity anchor — list_covered.
+  # ---------------------------------------------------------------------
+  - name: coverage_history_review
+    description: >
+      Assistant should call list_covered with a 30-day window and summarize.
+      Simple single-tool eval, useful as a stability anchor.
+    prompt: >
+      What have I written about in the last 30 days? A quick summary is fine.
+    expected_result: >
+      Answer must reflect list_covered's response — if items is empty, say
+      "no coverage recorded in the last 30 days"; otherwise summarize the
+      titles. Must not fabricate coverage entries.
+
+  # ---------------------------------------------------------------------
+  # 8. Diagnostic chain: get_trending_topics → get_source_config.
+  # ---------------------------------------------------------------------
+  - name: diagnose_source_failure
+    description: >
+      Assistant must fetch trending topics, inspect source_health for
+      failures, and cross-reference with get_source_config to explain what's
+      going wrong. All three sources (HN, arXiv, HF) are auth-free, so any
+      failure means an upstream outage or rate-limit — not a misconfig.
+    prompt: >
+      Run a trending topics fetch. Report the health of each source. If any
+      source failed, tell me what the error was and what a reasonable
+      recovery step would be.
+    expected_result: >
+      For each source in source_health, the answer must (a) name the source,
+      (b) state ok=true or ok=false, and (c) if false, quote or summarize
+      the error field. Since all three sources are auth-free, the assistant
+      must NOT suggest a credential fix — failures are upstream. Suggested
+      recovery should be "retry" or "check the upstream's status page". If
+      all sources succeeded, say so.
+
+  # ---------------------------------------------------------------------
+  # 9. Two get_trending_topics calls with different lookback_hours.
+  # ---------------------------------------------------------------------
+  - name: persistent_vs_ephemeral
+    description: >
+      Assistant must call get_trending_topics twice with different
+      lookback_hours (short vs long) and compare top-3 topics across the two
+      responses. Exercises the lookback_hours argument and cross-response
+      reasoning.
+    prompt: >
+      Compare the top 3 topics from the last 6 hours versus the last 48
+      hours. What's persistent (in both) versus what's ephemeral (in the
+      short window only)?
+    expected_result: >
+      Answer must reference two separate get_trending_topics calls with
+      lookback_hours=6 and lookback_hours=48, and identify overlap /
+      difference between the two top-3 lists by topic_id or canonical_title.
+      "Persistent" should mean present in both, "ephemeral" should mean
+      short-window-only. Don't invent topics — every claim must map to a
+      topic_id in one or both responses.
+
+  # ---------------------------------------------------------------------
+  # 10. Drill into a topic's items — get_trending_topics → explain_ranking.
+  # ---------------------------------------------------------------------
+  - name: highest_velocity_item_within_topic
+    description: >
+      Assistant must fetch trending topics, pick the highest-velocity topic,
+      call explain_ranking on it, and identify which specific item in
+      contributing_items has the highest velocity.
+    prompt: >
+      Find the topic with the highest cluster velocity in today's run. Then
+      tell me which specific item (post/paper) within that cluster
+      contributed the most to that velocity, and how much.
+    expected_result: >
+      Answer must (a) identify a topic with the highest score.velocity from
+      get_trending_topics, (b) use its topic_id in explain_ranking, and (c)
+      pick a specific item from contributing_items and report its velocity
+      value. The reported per-item velocity must be ≤ the cluster velocity
+      (max is what the cluster reports). If topics is empty, say so.

@@ -1,0 +1,28 @@
+name: roll-dice
+title: Roll Dice
+type: server
+image: mcp-dice:latest
+description: Rolls dice using RPG notation (1d20, 3d6+2) and reports dice statistics.
+tools:
+  - name: roll
+    description: Roll dice in NdM notation (e.g. "4d6", "2d20") and return individual dice, optional drop-lowest, total, and the seed used.
+    arguments:
+      - name: notation
+        type: string
+        desc: Dice expression such as "4d6" or "2d20".
+        optional: true
+      - name: drop_lowest
+        type: boolean
+        desc: If true, discard the single lowest die before summing.
+        optional: true
+      - name: seed
+        type: integer
+        desc: Optional integer seed. Supplying one makes the roll fully reproducible.
+        optional: true
+  - name: stat_block
+    description: Generate a six-score D&D ability array — 4d6 drop lowest, six times — with the seed used for reproducibility.
+    arguments:
+      - name: seed
+        type: integer
+        desc: Optional integer seed for reproducibility.
+        optional: true

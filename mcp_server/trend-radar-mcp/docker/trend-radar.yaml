@@ -1,0 +1,130 @@
+# Docker MCP Toolkit catalog entry.
+# Place at: ~/.docker/mcp/catalogs/trend-radar.yaml
+#
+# The `tools:` block is authoritative — the toolkit UI reads it from here
+# rather than live-probing the container. Every tool in src/trend_radar/server.py
+# must appear here with matching name and arguments, or it won't be callable
+# from Claude Desktop.
+
+name: trend-radar
+title: Trend Radar
+type: server
+image: trend-radar:latest
+description: >
+  Surfaces trending AI/ML topics from Hacker News, arXiv, and Hugging Face
+  Daily Papers. Deterministic scoring, LLM-clustered topics, novelty ledger to
+  avoid repeating covered stories.
+
+tools:
+  - name: get_trending_topics
+    description: >
+      Run the ingest→cluster→score→novelty-gate pipeline and return ranked
+      trending AI/ML topics for the given lookback window. Primary tool — call
+      once per briefing session, then use explain_ranking and check_novelty on
+      the returned topic_ids. A dead source degrades results but never fails the
+      call; inspect source_health.
+    arguments:
+      - name: lookback_hours
+        type: integer
+        desc: "How far back to look. Default 24."
+        optional: true
+      - name: limit
+        type: integer
+        desc: "Max topics to return. Default 15."
+        optional: true
+      - name: include_suppressed
+        type: boolean
+        desc: "Include novelty-suppressed topics (with suppressed=true). Default true."
+        optional: true
+      - name: sources
+        type: array
+        desc: "Restrict to a subset: hackernews, arxiv, huggingface. None = all three."
+        optional: true
+
+  - name: explain_ranking
+    description: >
+      Return the full arithmetic behind a topic's score: velocity, source
+      percentile, corroboration bonus, novelty multiplier, and every
+      contributing raw item with its own numbers. Reads from the cached last
+      run — does not re-ingest.
+    arguments:
+      - name: topic_id
+        type: string
+        desc: "12-char topic_id from a recent get_trending_topics response."
+
+  - name: check_novelty
+    description: >
+      Check an arbitrary topic string against the coverage ledger without
+      committing anything. Use before writing up a topic to confirm it's not a
+      rehash. Returns similarity score and closest match within the lookback
+      window (default 90 days).
+    arguments:
+      - name: title
+        type: string
+        desc: "Proposed topic title to check."
+      - name: one_line
+        type: string
+        desc: "Optional one-line summary; sharpens matching."
+        optional: true
+
+  - name: mark_covered
+    description: >
+      Record that a topic has been covered so future runs suppress it.
+      Idempotent on topic_id. Provide either topic_id (from a recent run) OR
+      canonical_title (for ad-hoc coverage that didn't come from trend-radar).
+    arguments:
+      - name: topic_id
+        type: string
+        desc: "12-char id from a recent run."
+        optional: true
+      - name: canonical_title
+        type: string
+        desc: "Free-text title; used if no topic_id provided."
+        optional: true
+      - name: post_url
+        type: string
+        desc: "URL of the published piece, for the ledger record."
+        optional: true
+      - name: notes
+        type: string
+        desc: "Angle taken, related topics, etc."
+        optional: true
+
+  - name: list_covered
+    description: >
+      List topics recorded in the coverage ledger, newest first. Useful for
+      reviewing recent output or sanity-checking why a topic is being suppressed.
+    arguments:
+      - name: days
+        type: integer
+        desc: "Lookback in days. Default 90."
+        optional: true
+      - name: limit
+        type: integer
+        desc: "Max rows. Default 100."
+        optional: true
+
+  - name: get_source_config
+    description: >
+      Diagnostic view of the server's runtime configuration: which sources are
+      enabled, which have credentials present, and the scoring constants in
+      effect. Call this first when a run misbehaves. Never returns credential
+      values.
+
+# --- Secrets ---------------------------------------------------------------
+# Dot-namespaced names; the toolkit stores each value in the OS keychain and
+# injects it into the container as the environment variable named by `env:`.
+# Set them once per host with `docker mcp secret set <name>`. The container
+# never sees the value from a file, and the value never appears in any log.
+#
+# All three data sources (HN, arXiv, HF) are auth-free. The only secret here
+# is the optional Anthropic key — absent it, clustering falls back to lexical
+# and everything else still works.
+
+secrets:
+  - name: trend-radar.anthropic_api_key
+    env: ANTHROPIC_API_KEY
+
+# Optional. If unset, no telemetry is emitted.
+#  - name: trend-radar.logfire_token
+#    env: LOGFIRE_TOKEN

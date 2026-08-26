@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.local.notes-bridge</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__PYTHON__</string>
+        <string>__BRIDGE_PY__</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>NOTES_BRIDGE_HOST</key>
+        <string>0.0.0.0</string>
+        <key>NOTES_BRIDGE_PORT</key>
+        <string>48213</string>
+        <key>NOTES_BRIDGE_SECRET</key>
+        <string>__SECRET__</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/notes-bridge.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/notes-bridge.err</string>
+
+    <key>ProcessType</key>
+    <string>Interactive</string>
+</dict>
+</plist>

@@ -1,0 +1,37 @@
+# Keep the build context lean and the image slim.
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Tests + scripts — never shipped in the runtime image
+tests/
+scripts/
+
+# Secrets / local state
+.env
+*.db
+*.db-journal
+data/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Git + Docker
+.git/
+.gitignore
+docker/
+Dockerfile
+.dockerignore

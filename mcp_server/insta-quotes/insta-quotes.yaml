@@ -1,0 +1,33 @@
+name: insta-quotes
+title: Instagram Founder Quotes
+type: server
+image: insta-quotes-mcp:0.1.0
+description: >
+  Generates Instagram-ready motivational quotes from founders and CEOs
+  (Jobs, Musk, Bezos, Gates, Nithin Kamath, Nikhil Kamath, ...) grounded
+  in real web sources. Given a theme, picks a fitting founder, searches
+  the web for their journey, and returns source excerpts plus a
+  synthesis brief the calling model uses to produce the final post,
+  caption, hashtags, and image prompt.
+tools:
+  - name: create_quote
+    description: >
+      Pick a founder that fits the theme, search the web for interviews
+      and journey stories, and return source snippets plus a synthesis
+      brief for the calling model to compose the Instagram post.
+    arguments:
+      - name: theme
+        type: string
+        desc: >
+          Theme keyword — "perseverance", "failure", "first-customer",
+          "innovation", "discipline", "vision", "risk", "team",
+          "customer-obsession", or any freeform theme.
+        optional: false
+      - name: founder
+        type: string
+        desc: Optional. Force a specific founder (e.g. "Nithin Kamath").
+        optional: true
+      - name: count
+        type: integer
+        desc: How many post variants the calling LLM should produce. Default 1.
+        optional: true

@@ -1,0 +1,35 @@
+[
+  {
+    "publishedAt": "2026-08-22T00:00:00.000Z",
+    "paper": {
+      "id": "2408.55555",
+      "title": "Verifier-Guided Reasoning Beats Chain-of-Thought at Half the Tokens",
+      "summary": "We show that lightweight verifiers dramatically improve reasoning accuracy while cutting inference cost.",
+      "upvotes": 128,
+      "publishedAt": "2026-08-22T00:00:00.000Z",
+      "submittedOnDailyAt": "2026-08-24T00:00:00.000Z"
+    }
+  },
+  {
+    "publishedAt": "2026-08-23T09:00:00.000Z",
+    "paper": {
+      "id": "2408.66666",
+      "title": "Sparse Mixture of Experts with Learned Routing",
+      "summary": "A new routing algorithm that achieves lower load imbalance without auxiliary losses.",
+      "upvotes": 47,
+      "publishedAt": "2026-08-23T09:00:00.000Z",
+      "submittedOnDailyAt": "2026-08-24T09:00:00.000Z"
+    }
+  },
+  {
+    "publishedAt": "2026-08-21T06:00:00.000Z",
+    "paper": {
+      "id": "2408.77777",
+      "title": "Paper submitted to HF Daily 30 hours ago",
+      "summary": "Outside the 24h lookback window on submittedOnDailyAt.",
+      "upvotes": 15,
+      "publishedAt": "2026-08-21T06:00:00.000Z",
+      "submittedOnDailyAt": "2026-08-23T06:00:00.000Z"
+    }
+  }
+]

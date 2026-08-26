@@ -1,0 +1,86 @@
+{
+  "themes": {
+    "perseverance": [
+      {"name": "Elon Musk", "context": "SpaceX / Tesla near-bankruptcy 2008"},
+      {"name": "Steve Jobs", "context": "ousted from Apple, returned to build the iPhone"},
+      {"name": "Jeff Bezos", "context": "Amazon's first decade of losses"},
+      {"name": "Nithin Kamath", "context": "traded for years before starting Zerodha"},
+      {"name": "Ratan Tata", "context": "the 1991 crisis that forced the Tata group's turnaround"},
+      {"name": "Sara Blakely", "context": "years selling fax machines before Spanx"},
+      {"name": "Falguni Nayar", "context": "left banking at 50 to start Nykaa"}
+    ],
+    "failure": [
+      {"name": "Steve Jobs", "context": "fired from Apple in 1985"},
+      {"name": "Bill Gates", "context": "Traf-O-Data flop before Microsoft"},
+      {"name": "Jeff Bezos", "context": "Fire Phone write-down"},
+      {"name": "Nikhil Kamath", "context": "early trading losses in his teens"},
+      {"name": "Reid Hoffman", "context": "SocialNet collapse before LinkedIn"},
+      {"name": "Marc Andreessen", "context": "Loudcloud's near-death pivot to Opsware"}
+    ],
+    "first-customer": [
+      {"name": "Jeff Bezos", "context": "Amazon's first book order shipped from a garage"},
+      {"name": "Nithin Kamath", "context": "Zerodha's first sub-broker clients"},
+      {"name": "Brian Chesky", "context": "Airbnb's first air-mattress guests"},
+      {"name": "Sam Walton", "context": "Walton's Five and Dime opening day in Rogers, AR"},
+      {"name": "Sara Blakely", "context": "Neiman Marcus's first Spanx order"}
+    ],
+    "innovation": [
+      {"name": "Steve Jobs", "context": "building the iPhone against every focus group"},
+      {"name": "Elon Musk", "context": "reusable rockets when nobody thought it was possible"},
+      {"name": "Bill Gates", "context": "a computer on every desk, in 1975"},
+      {"name": "Marc Andreessen", "context": "shipping Mosaic and betting the web on it"},
+      {"name": "Reid Hoffman", "context": "'if you're not embarrassed by v1, you shipped too late'"}
+    ],
+    "discipline": [
+      {"name": "Nikhil Kamath", "context": "reading, chess, and 4am study routines"},
+      {"name": "Jeff Bezos", "context": "long-term thinking and two-pizza teams"},
+      {"name": "Warren Buffett", "context": "reading 500 pages a day for 60 years"},
+      {"name": "Ratan Tata", "context": "the quiet Bombay House working style"},
+      {"name": "Sam Walton", "context": "6am Saturday morning meetings for 30 years"}
+    ],
+    "vision": [
+      {"name": "Steve Jobs", "context": "connect the dots looking backward"},
+      {"name": "Elon Musk", "context": "making humanity multi-planetary"},
+      {"name": "Jeff Bezos", "context": "Day 1 mindset"},
+      {"name": "Ratan Tata", "context": "the Nano — a car for the family on a scooter"},
+      {"name": "Reid Hoffman", "context": "'the network is the platform'"},
+      {"name": "Marc Andreessen", "context": "software is eating the world"}
+    ],
+    "risk": [
+      {"name": "Elon Musk", "context": "putting his last $180M PayPal money into SpaceX, Tesla, SolarCity"},
+      {"name": "Nithin Kamath", "context": "leaving a stable trading desk to start Zerodha in 2010"},
+      {"name": "Jeff Bezos", "context": "quitting D.E. Shaw for an online bookstore"},
+      {"name": "Sara Blakely", "context": "$5,000 in savings, no manufacturer, no MBA"},
+      {"name": "Reid Hoffman", "context": "'jump off a cliff and build the plane on the way down'"}
+    ],
+    "team": [
+      {"name": "Steve Jobs", "context": "A-players hire A-players"},
+      {"name": "Jeff Bezos", "context": "two-pizza teams"},
+      {"name": "Bill Gates", "context": "hiring smart generalists over specialists"},
+      {"name": "Reid Hoffman", "context": "the tour-of-duty employment compact"},
+      {"name": "Sam Walton", "context": "associates, not employees — profit-sharing across the store"}
+    ],
+    "customer-obsession": [
+      {"name": "Jeff Bezos", "context": "empty chair for the customer in every meeting"},
+      {"name": "Nithin Kamath", "context": "zero brokerage as a customer-first bet"},
+      {"name": "Sam Walton", "context": "the ten-foot rule and same-day price matching"},
+      {"name": "Falguni Nayar", "context": "Nykaa's tutorials-first content strategy before commerce"}
+    ]
+  },
+  "fallback": [
+    {"name": "Elon Musk", "context": "SpaceX / Tesla"},
+    {"name": "Steve Jobs", "context": "Apple"},
+    {"name": "Jeff Bezos", "context": "Amazon"},
+    {"name": "Bill Gates", "context": "Microsoft"},
+    {"name": "Nithin Kamath", "context": "Zerodha"},
+    {"name": "Nikhil Kamath", "context": "Zerodha / True Beacon"},
+    {"name": "Ratan Tata", "context": "Tata Group"},
+    {"name": "Sam Walton", "context": "Walmart"},
+    {"name": "Warren Buffett", "context": "Berkshire Hathaway"},
+    {"name": "Reid Hoffman", "context": "LinkedIn / Greylock"},
+    {"name": "Marc Andreessen", "context": "Netscape / a16z"},
+    {"name": "Sara Blakely", "context": "Spanx"},
+    {"name": "Falguni Nayar", "context": "Nykaa"},
+    {"name": "Brian Chesky", "context": "Airbnb"}
+  ]
+}

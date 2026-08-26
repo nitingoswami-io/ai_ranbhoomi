@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title type="html">arXiv Query</title>
+  <id>http://arxiv.org/api/test</id>
+  <updated>2026-08-24T12:00:00Z</updated>
+  <entry>
+    <id>http://arxiv.org/abs/2408.12345v1</id>
+    <updated>2026-08-24T09:00:00Z</updated>
+    <published>2026-08-24T09:00:00Z</published>
+    <title>Efficient Attention via State-Space Duality</title>
+    <summary>We present a new attention mechanism that recovers state-space efficiency while retaining transformer expressiveness. Experiments show 2x throughput at matched accuracy.</summary>
+    <author><name>Alice Example</name></author>
+    <category term="cs.LG" />
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2408.12346v1</id>
+    <updated>2026-08-24T00:00:00Z</updated>
+    <published>2026-08-24T00:00:00Z</published>
+    <title>Constitutional Fine-Tuning at Scale</title>
+    <summary>A framework for aligning models against a written constitution with reduced annotation overhead.</summary>
+    <author><name>Bob Example</name></author>
+    <category term="cs.CL" />
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2408.11111v1</id>
+    <updated>2026-08-23T06:00:00Z</updated>
+    <published>2026-08-23T06:00:00Z</published>
+    <title>Old paper outside the 24h window</title>
+    <summary>Should be filtered by the cutoff.</summary>
+    <author><name>Carol Example</name></author>
+    <category term="cs.AI" />
+  </entry>
+</feed>

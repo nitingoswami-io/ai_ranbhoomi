@@ -1,0 +1,14 @@
+# Server definition for the Docker MCP Toolkit.
+# Registered with:  docker mcp profile server add <profile> --server file://./dice-server.yaml
+#
+# `image` must resolve on the machine running the gateway. A locally built
+# tag works for local use; push to a registry before sharing with anyone else.
+
+name: dice
+title: Dice Roller
+type: server
+image: dice-mcp:0.1.0
+description: >
+  Deterministic dice rolling. Exposes `roll` for arbitrary NdM notation with
+  optional drop-lowest, and `stat_block` for a six-score D&D ability array.
+  Both accept a seed, so any result can be reproduced and audited.

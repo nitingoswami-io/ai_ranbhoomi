@@ -1,0 +1,60 @@
+# Server definition for the Docker MCP Toolkit.
+# Registered with:  docker mcp catalog import ./apple-notes-server.yaml
+# (or add to a profile:  docker mcp profile server add <profile> --server file://./apple-notes-server.yaml)
+#
+# `image` must resolve on the machine running the gateway. Built locally with:
+#   docker build -t apple-notes-mcp:0.1.0 ./server
+#
+# The server relies on the notes-bridge running on the macOS host at
+# host.docker.internal:48213 — see ../bridge/install-bridge.sh.
+
+name: apple-notes
+title: Apple Notes
+type: server
+image: apple-notes-mcp:0.1.0
+description: >
+  Read, create, update, and delete notes in Apple Notes on macOS.
+  Requires the notes-bridge companion daemon running on the host
+  (installed via bridge/install-bridge.sh). Access is authenticated
+  with a shared secret passed via NOTES_BRIDGE_SECRET.
+env:
+  - name: NOTES_BRIDGE_URL
+    value: http://host.docker.internal:48213
+
+# Secrets are injected as env vars at runtime by the gateway. Register with:
+#   cat bridge/.secret | docker mcp secret set apple-notes.bridge-secret
+secrets:
+  - name: apple-notes.bridge-secret
+    env: NOTES_BRIDGE_SECRET
+
+# Tools exposed by this server. The gateway uses `name` + `description` for
+# discovery; the runtime source of truth for signatures is server/notes_mcp.py.
+tools:
+  - name: list_notes
+    description: >
+      List notes as {id, name, folder, modified, created}. Optionally scope to
+      one folder by name and cap the result count (default 50; large libraries
+      are slow if unbounded).
+  - name: get_note
+    description: >
+      Fetch a note's full body by id (from list_notes or search_notes). Returns
+      both `body` (HTML as Notes stores it) and `plaintext`.
+  - name: create_note
+    description: >
+      Create a note with title `name`, optional `body` (accepts simple HTML),
+      and optional target `folder` name. Omit folder to use the default folder.
+  - name: update_note
+    description: >
+      Update a note's title and/or body by id. `mode="replace"` (default)
+      overwrites the body; `mode="append"` adds to the end.
+  - name: delete_note
+    description: >
+      Move a note to Recently Deleted by id. Recoverable for 30 days in the
+      Notes UI — not a hard delete.
+  - name: list_folders
+    description: List all Notes folders as {id, name}.
+  - name: search_notes
+    description: >
+      Case-insensitive substring search over note title and plaintext body.
+      Returns summaries only; call get_note for the full body. Notes made up
+      solely of attachments/checklists have no plaintext and won't match.

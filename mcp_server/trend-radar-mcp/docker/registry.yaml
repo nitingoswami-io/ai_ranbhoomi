@@ -1,0 +1,12 @@
+# Optional: global-enable snippet for ~/.docker/mcp/registry.yaml.
+#
+# The recommended workflow (in the README) uses profiles:
+#     docker mcp profile server add <PROFILE> --server file://trend-radar.yaml
+#
+# If you prefer to enable trend-radar globally instead — so every profile
+# picks it up automatically — merge the block below into your
+# ~/.docker/mcp/registry.yaml. This is optional; skip if you use profiles.
+
+registry:
+  trend-radar:
+    ref: ""      # empty ref → resolves from ~/.docker/mcp/catalogs/trend-radar.yaml
