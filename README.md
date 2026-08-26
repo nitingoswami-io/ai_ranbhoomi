@@ -39,6 +39,21 @@ The two are designed to run back-to-back. `insta-quotes` is the **research** sta
 
 The seam between the two is intentional: `insta-quotes` guarantees grounding material with URLs, and `instagram-quote-card` guarantees nothing ships without attribution the caller can defend. Neither trusts the other to enforce it.
 
+### `trend-radar` → writer → renderer → Apple Notes / Notion
+
+Daily AI/ML content pipeline. **Stage 1 (`trend-radar`) and the terminal stage (`apple-notes`) live in this repo; the writer and renderer in the middle are not yet built — they belong in `pipeline/`.**
+
+The intended flow:
+
+1. **`trend-radar.get_trending_topics`** pulls the day's items from Hacker News, arXiv, and Hugging Face Daily Papers, clusters them (LLM-normalized when `ANTHROPIC_API_KEY` is set, lexical fallback otherwise), and returns ranked topics. Cross-source corroboration dominates rank — an arXiv paper that also lands on HN or the HF daily list rises to the top.
+2. **`trend-radar.check_novelty`** filters the ranked list against a persistent SQLite ledger (mounted at `/data`). Anything already covered is skipped — the same story never gets written twice.
+3. **Writer (planned, `pipeline/`)** — a Pydantic AI agent turns the surviving top-N topics into narrative drafts. Uses `trend-radar.explain_ranking` to ground each draft in the actual signal (points, upvotes, source overlap) rather than fabricating reasons a topic matters.
+4. **Renderer (planned, `pipeline/`)** — formats each draft for its target surface (Markdown for Apple Notes, blocks for Notion).
+5. **Terminal delivery** — `apple-notes` MCP writes the rendered piece into a Notes folder on macOS via the host bridge; Notion delivery uses the external Notion MCP.
+6. **`trend-radar.mark_covered`** — closes the loop. Idempotent, so re-running the pipeline on the same day is safe.
+
+The novelty ledger is the load-bearing piece. Without it, the pipeline re-covers whatever is trending most persistently and produces near-duplicate output day after day. `check_novelty` before writing and `mark_covered` after publishing are non-optional gates, not conveniences.
+
 ## Conventions
 
 - Secrets stay out of git — see `.gitignore` (`.env`, `*.secret`, etc.). Rotate anything that was ever committed elsewhere.
