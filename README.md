@@ -56,6 +56,8 @@ The novelty ledger is the load-bearing piece. Without it, the pipeline re-covers
 
 **Automating it:** [`pipeline/DAILY.md`](pipeline/DAILY.md) walks through wiring the whole thing up as a launchd job that fires at 21:00 daily. Uses `pipeline/run_daily.sh` as the orchestrator; catches up on Mac-wake if the machine was asleep at the scheduled time.
 
+**Migrating to another Mac (e.g. a Mac mini):** [`scripts/MIGRATION.md`](scripts/MIGRATION.md) covers the full setup. Run [`scripts/migrate-mac.sh`](scripts/migrate-mac.sh) — idempotent; handles uv install, venv sync, .env, notes-bridge LaunchAgent, and daily-runner LaunchAgent in one pass. `--doctor` mode validates a live install without touching anything.
+
 ## Conventions
 
 - Secrets stay out of git — see `.gitignore` (`.env`, `*.secret`, etc.). Rotate anything that was ever committed elsewhere.
